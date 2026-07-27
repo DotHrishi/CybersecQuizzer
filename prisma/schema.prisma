@@ -1,0 +1,42 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Question {
+  id            Int      @id @default(autoincrement())
+  questionText  String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String   // "A", "B", "C", or "D"
+  category      String   @default("General Security")
+  difficulty    String   @default("Medium") // "Easy", "Medium", "Hard"
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("questions")
+}
+
+model UserAttempt {
+  id             Int      @id @default(autoincrement())
+  userName       String
+  quizDate       String   // Format: "YYYY-MM-DD"
+  isCorrect      Boolean
+  score          Int      // Base score: 1 if correct, 0 if wrong
+  bonusPoints    Int      // Speed bonus: 10, 8, 6, 4, 2, 1, 0
+  totalPoints    Int      // score + bonusPoints
+  responseTimeMs Int      // Milliseconds taken to respond
+  createdAt      DateTime @default(now())
+
+  @@index([userName])
+  @@index([quizDate])
+  @@index([userName, quizDate])
+  @@map("user_attempts")
+}

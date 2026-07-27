@@ -1,0 +1,57 @@
+[
+  {
+    "questionText": "What is the primary purpose of a firewall?",
+    "optionA": "To detect malware on a system",
+    "optionB": "To monitor and control incoming and outgoing network traffic",
+    "optionC": "To encrypt data at rest",
+    "optionD": "To manage user passwords",
+    "correctOption": "B",
+    "category": "Network Security",
+    "difficulty": "Easy",
+    "active": true
+  },
+  {
+    "questionText": "Which attack involves sending fraudulent emails to trick users into revealing sensitive information?",
+    "optionA": "SQL Injection",
+    "optionB": "DDoS",
+    "optionC": "Phishing",
+    "optionD": "Man-in-the-Middle",
+    "correctOption": "C",
+    "category": "Social Engineering",
+    "difficulty": "Easy",
+    "active": true
+  },
+  {
+    "questionText": "What does 'Zero Trust' architecture imply?",
+    "optionA": "All users inside the network are trusted",
+    "optionB": "Never trust, always verify, regardless of location",
+    "optionC": "Trust is established once per session",
+    "optionD": "Only external traffic is untrusted",
+    "correctOption": "B",
+    "category": "Architecture",
+    "difficulty": "Medium",
+    "active": true
+  },
+  {
+    "questionText": "Which of the following is a symmetric encryption algorithm?",
+    "optionA": "RSA",
+    "optionB": "ECC",
+    "optionC": "AES",
+    "optionD": "Diffie-Hellman",
+    "correctOption": "C",
+    "category": "Cryptography",
+    "difficulty": "Hard",
+    "active": true
+  },
+  {
+    "questionText": "What is 'lateral movement' in a cyberattack?",
+    "optionA": "An attacker moving between physical locations",
+    "optionB": "Techniques used by attackers to progressively move through a network",
+    "optionC": "Moving malware between different hard drives",
+    "optionD": "Switching between multiple C2 servers",
+    "correctOption": "B",
+    "category": "Advanced Threats",
+    "difficulty": "Medium",
+    "active": true
+  }
+]
