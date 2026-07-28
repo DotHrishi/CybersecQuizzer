@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { dataService } from '@/lib/dataService';
 
 function verifyAdminAuth(req: NextRequest): boolean {
-  const adminHeader = req.headers.get('x-admin-password');
-  const expectedPassword = process.env.ADMIN_PASSWORD || 'cyberadmin123';
-  return adminHeader === expectedPassword;
+  const adminHeader = req.headers.get('x-admin-password')?.trim();
+  const expectedPassword = (process.env.ADMIN_PASSWORD || 'cyberadmin123').trim();
+  return Boolean(adminHeader && adminHeader === expectedPassword);
 }
 
 export async function GET(req: NextRequest) {
@@ -13,17 +13,19 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const totalQuestions = await db.question.count();
-    const activeQuestions = await db.question.count({ where: { active: true } });
-    const totalAttempts = await db.userAttempt.count();
+    const questions = await dataService.getAllQuestions();
+    const attempts = await dataService.getAllAttempts();
 
-    const uniqueUsersResult: any[] = await db.$queryRaw`
-      SELECT COUNT(DISTINCT userName) as count FROM user_attempts;
-    `;
-    const totalUsers = Number(uniqueUsersResult[0]?.count || 0);
+    const totalQuestions = questions.length;
+    const activeQuestions = questions.filter((q: any) => q.active).length;
+    const totalAttempts = attempts.length;
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayAttempts = await db.userAttempt.count({ where: { quizDate: todayStr } });
+    const uniqueUsersSet = new Set(attempts.map((a: any) => a.userName));
+    const totalUsers = uniqueUsersSet.size;
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const todayAttempts = attempts.filter((a: any) => a.quizDate === todayStr).length;
 
     return NextResponse.json({
       success: true,

@@ -55,8 +55,8 @@ export default function UserReportView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyber-accent to-indigo-600 p-0.5 shadow-md flex items-center justify-center">
-            <BarChart3 className="w-6 h-6 text-cyber-950" />
+          <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 p-0.5 shadow-md flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-white">Performance Report</h1>
@@ -73,12 +73,12 @@ export default function UserReportView() {
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               placeholder="Enter first name..."
-              className="pl-9 pr-3 py-1.5 bg-cyber-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyber-accent"
+              className="pl-9 pr-3 py-1.5 bg-cyber-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-white"
             />
           </div>
           <button
             type="submit"
-            className="px-3.5 py-1.5 rounded-xl bg-cyber-accent text-cyber-950 text-xs font-bold shadow-md hover:bg-cyan-400 transition-colors"
+            className="px-3.5 py-1.5 rounded-xl bg-white text-black text-xs font-bold shadow-md hover:bg-slate-200 transition-colors"
           >
             Fetch
           </button>
@@ -100,7 +100,7 @@ export default function UserReportView() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-4 rounded-2xl bg-cyber-900/80 border border-slate-800 space-y-1">
               <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-                <Target className="w-3.5 h-3.5 text-cyber-accent" />
+                <Target className="w-3.5 h-3.5 text-white" />
                 <span>Accuracy</span>
               </div>
               <p className="text-2xl font-extrabold text-white">{stats.accuracyPercentage}%</p>
@@ -112,13 +112,13 @@ export default function UserReportView() {
                 <Trophy className="w-3.5 h-3.5 text-amber-400" />
                 <span>Total Points</span>
               </div>
-              <p className="text-2xl font-extrabold text-cyber-accent">{stats.totalPoints}</p>
+              <p className="text-2xl font-extrabold text-white">{Number(stats.totalPoints).toFixed(2)}</p>
               <p className="text-[10px] text-slate-500">Rank #{stats.bestRank}</p>
             </div>
 
             <div className="p-4 rounded-2xl bg-cyber-900/80 border border-slate-800 space-y-1">
               <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-                <Clock className="w-3.5 h-3.5 text-neonGreen" />
+                <Clock className="w-3.5 h-3.5 text-slate-200" />
                 <span>Avg Response</span>
               </div>
               <p className="text-2xl font-extrabold text-white">{(stats.avgResponseTimeMs / 1000).toFixed(2)}s</p>
@@ -127,7 +127,7 @@ export default function UserReportView() {
 
             <div className="p-4 rounded-2xl bg-cyber-900/80 border border-slate-800 space-y-1">
               <div className="flex items-center space-x-1.5 text-xs text-slate-400">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-slate-300" />
                 <span>Attempts</span>
               </div>
               <p className="text-2xl font-extrabold text-white">{stats.totalAttempts}</p>
@@ -148,19 +148,19 @@ export default function UserReportView() {
                 >
                   <div className="flex items-center space-x-3">
                     {h.isCorrect ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-slate-200 flex-shrink-0" />
                     ) : (
                       <XCircle className="w-5 h-5 text-rose-400 flex-shrink-0" />
                     )}
                     <div>
                       <p className="font-bold text-white">{h.quizDate}</p>
                       <p className="text-[11px] text-slate-400">
-                        {h.isCorrect ? `Score: 1 Base + ${h.bonusPoints} Speed Bonus` : 'Score: 0'}
+                        {h.isCorrect ? `Base 2.00 + ${Number(h.bonusPoints).toFixed(2)} Bonus` : 'Score: 0.00'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-extrabold text-cyber-accent block">{h.totalPoints} pts</span>
+                    <span className="font-extrabold text-white block">{Number(h.totalPoints).toFixed(2)} pts</span>
                     <span className="text-xs font-mono text-slate-500">{(h.responseTimeMs / 1000).toFixed(2)}s</span>
                   </div>
                 </div>

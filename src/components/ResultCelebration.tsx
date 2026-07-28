@@ -50,22 +50,22 @@ export default function ResultCelebration({
   }, [isCorrect]);
 
   return (
-    <div className="max-w-xl mx-auto my-8 glass-panel-glow p-8 rounded-3xl border border-cyber-accent/30 text-center shadow-cyber-glow animate-float">
+    <div className="max-w-xl mx-auto my-8 glass-panel-glow p-8 rounded-3xl border border-white/20 text-center shadow-white-glow animate-float">
       {isCorrect ? (
         <div className="space-y-6">
           {/* Trophy & Celebration Visual */}
           <div className="relative inline-block">
-            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-600 p-1 shadow-neon-green animate-bounce">
+            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-600 p-1 shadow-lg animate-bounce">
               <div className="w-full h-full bg-cyber-950 rounded-[22px] flex items-center justify-center">
                 <Trophy className="w-12 h-12 text-amber-400" />
               </div>
             </div>
-            <Sparkles className="w-8 h-8 text-cyber-accent absolute -top-2 -right-2 animate-spin" />
-            <Sparkles className="w-6 h-6 text-neonGreen absolute -bottom-1 -left-2 animate-pulse" />
+            <Sparkles className="w-8 h-8 text-white absolute -top-2 -right-2 animate-spin" />
+            <Sparkles className="w-6 h-6 text-slate-300 absolute -bottom-1 -left-2 animate-pulse" />
           </div>
 
           <div>
-            <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-widest mb-2">
+            <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-white border border-white/20 text-xs font-bold uppercase tracking-widest mb-2">
               Success Verified
             </span>
             <h2 className="text-3xl font-extrabold text-white">{message}</h2>
@@ -76,26 +76,26 @@ export default function ResultCelebration({
           <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-cyber-900/90 border border-slate-800">
             <div className="p-3 rounded-xl bg-cyber-950/60 border border-slate-800">
               <span className="block text-[10px] text-slate-400 uppercase font-semibold">Base Score</span>
-              <span className="text-xl font-extrabold text-emerald-400">+{score}</span>
+              <span className="text-xl font-extrabold text-white">+{score.toFixed(2)}</span>
             </div>
             <div className="p-3 rounded-xl bg-cyber-950/60 border border-slate-800">
-              <span className="block text-[10px] text-slate-400 uppercase font-semibold">Speed Bonus</span>
-              <span className="text-xl font-extrabold text-cyber-accent">+{bonusPoints}</span>
+              <span className="block text-[10px] text-slate-400 uppercase font-semibold">Bonus Points</span>
+              <span className="text-xl font-extrabold text-slate-200">+{bonusPoints.toFixed(2)}</span>
             </div>
             <div className="p-3 rounded-xl bg-cyber-950/60 border border-slate-800">
-              <span className="block text-[10px] text-slate-400 uppercase font-semibold">Total Points</span>
-              <span className="text-xl font-extrabold text-neonGreen">{totalPoints}</span>
+              <span className="block text-[10px] text-slate-400 uppercase font-semibold">Total Score</span>
+              <span className="text-xl font-extrabold text-white">{totalPoints.toFixed(2)}</span>
             </div>
           </div>
 
           <p className="text-xs text-slate-400 flex items-center justify-center space-x-1">
-            <Zap className="w-3.5 h-3.5 text-cyber-accent" />
+            <Zap className="w-3.5 h-3.5 text-white" />
             <span>Response Time: <strong>{(responseTimeMs / 1000).toFixed(2)} seconds</strong></span>
           </p>
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Wrong Answer Subtle Sad Visual */}
+          {/* Wrong Answer Visual */}
           <div className="w-20 h-20 mx-auto rounded-3xl bg-slate-800/80 border border-slate-700 p-1 flex items-center justify-center">
             <Frown className="w-10 h-10 text-amber-400" />
           </div>
@@ -113,7 +113,7 @@ export default function ResultCelebration({
           <div className="p-4 rounded-2xl bg-cyber-900/80 border border-slate-800 text-sm">
             <div className="flex justify-between items-center text-slate-300">
               <span>Points Earned Today:</span>
-              <span className="font-bold text-slate-400">0 pts</span>
+              <span className="font-bold text-slate-400">0.00 pts</span>
             </div>
             <div className="flex justify-between items-center text-slate-400 text-xs mt-1">
               <span>Time Elapsed:</span>
@@ -127,7 +127,7 @@ export default function ResultCelebration({
       <div className="pt-6 border-t border-slate-800 mt-6 flex flex-wrap gap-3 justify-center">
         <Link
           href="/leaderboard"
-          className="flex items-center space-x-2 px-6 py-3 rounded-xl cyber-button text-sm font-bold shadow-lg"
+          className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-white text-black hover:bg-slate-200 text-sm font-bold shadow-lg transition-all"
         >
           <Award className="w-4 h-4" />
           <span>Check Leaderboard</span>

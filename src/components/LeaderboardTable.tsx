@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Trophy, Calendar, Clock, Award, Zap, RefreshCw, Search } from 'lucide-react';
+import { Trophy, Award, RefreshCw, Search, Clock, CheckCircle2 } from 'lucide-react';
 import { LeaderboardEntry } from '@/types/quiz';
 import toast from 'react-hot-toast';
 
 export default function LeaderboardTable() {
-  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'all-time'>('daily');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -46,35 +46,35 @@ export default function LeaderboardTable() {
   return (
     <div className="max-w-4xl mx-auto my-6 glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 space-y-6 shadow-2xl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-600 p-0.5 shadow-md flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-cyber-950" />
+          <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 p-0.5 shadow-md flex items-center justify-center">
+            <Trophy className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-white">Global Leaderboard</h1>
-            <p className="text-xs text-slate-400">Rankings based on total points and average response time</p>
+            <p className="text-xs text-slate-400">Sorted by Points → Correct Answers → Fastest Avg Time</p>
           </div>
         </div>
 
-        {/* Period Selector Tabs */}
-        <div className="flex items-center bg-cyber-900 p-1 rounded-xl border border-slate-800">
-          {(['daily', 'weekly', 'monthly'] as const).map((p) => (
+        {/* Period Selector Tabs (Daily, Weekly, Monthly, All-Time) */}
+        <div className="flex flex-wrap items-center bg-cyber-900 p-1 rounded-xl border border-slate-800">
+          {(['daily', 'weekly', 'monthly', 'all-time'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
                 period === p
-                  ? 'bg-cyber-accent text-cyber-950 shadow-md'
+                  ? 'bg-white text-black shadow-md'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              {p}
+              {p === 'all-time' ? 'All-Time' : p}
             </button>
           ))}
           <button
             onClick={() => fetchLeaderboard(period)}
-            className="p-1.5 ml-1 text-slate-400 hover:text-cyber-accent transition-colors"
+            className="p-1.5 ml-1 text-slate-400 hover:text-white transition-colors"
             title="Refresh Leaderboard"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -92,14 +92,14 @@ export default function LeaderboardTable() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by username..."
-          className="w-full pl-10 pr-4 py-2.5 bg-cyber-900 border border-slate-800 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-cyber-accent transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 bg-cyber-900 border border-slate-800 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-white transition-colors"
         />
       </div>
 
       {/* Leaderboard Data Table */}
       {isLoading ? (
         <div className="py-16 text-center text-slate-400 space-y-3">
-          <RefreshCw className="w-8 h-8 mx-auto animate-spin text-cyber-accent" />
+          <RefreshCw className="w-8 h-8 mx-auto animate-spin text-white" />
           <p className="text-sm font-medium">Loading rankings...</p>
         </div>
       ) : entries.length === 0 ? (
@@ -114,14 +114,14 @@ export default function LeaderboardTable() {
           <p className="text-base font-semibold text-slate-300">No matching users found.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: '60vh' }}>
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] uppercase font-bold text-slate-400 tracking-wider sticky top-0 z-10 bg-cyber-950">
                 <th className="py-3.5 px-4">Rank</th>
                 <th className="py-3.5 px-4">User Name</th>
                 <th className="py-3.5 px-4 text-center">Attempts</th>
-                <th className="py-3.5 px-4 text-center">Correct</th>
+                <th className="py-3.5 px-4 text-center">Correct Answers</th>
                 <th className="py-3.5 px-4 text-center">Total Points</th>
                 <th className="py-3.5 px-4 text-right">Avg Response</th>
                 <th className="py-3.5 px-4 text-right">Last Attempt</th>
@@ -136,25 +136,25 @@ export default function LeaderboardTable() {
                 return (
                   <tr
                     key={entry.userName}
-                    className={`hover:bg-cyber-900/60 transition-colors ${
-                      isTop1 ? 'bg-amber-500/5' : isTop2 ? 'bg-slate-300/5' : isTop3 ? 'bg-amber-700/5' : ''
+                    className={`hover:bg-slate-800/40 transition-colors ${
+                      isTop1 ? 'bg-white/[0.04]' : isTop2 ? 'bg-slate-400/[0.03]' : isTop3 ? 'bg-slate-500/[0.02]' : ''
                     }`}
                   >
                     {/* Rank Badge */}
                     <td className="py-4 px-4 font-bold">
                       {isTop1 && (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-400 text-cyber-950 font-extrabold text-xs shadow-md">
-                          🥇 1
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-400 text-black font-extrabold text-xs shadow-md">
+                          🥇 #1
                         </span>
                       )}
                       {isTop2 && (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-300 text-cyber-950 font-extrabold text-xs shadow-md">
-                          🥈 2
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-slate-200 text-black font-extrabold text-xs shadow-md">
+                          🥈 #2
                         </span>
                       )}
                       {isTop3 && (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-700 text-white font-extrabold text-xs shadow-md">
-                          🥉 3
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-700 text-white font-extrabold text-xs shadow-md">
+                          🥉 #3
                         </span>
                       )}
                       {!isTop1 && !isTop2 && !isTop3 && (
@@ -173,13 +173,13 @@ export default function LeaderboardTable() {
                     </td>
 
                     {/* Correct */}
-                    <td className="py-4 px-4 text-center font-bold text-emerald-400">
+                    <td className="py-4 px-4 text-center font-bold text-slate-200">
                       {entry.correctAnswers}
                     </td>
 
                     {/* Points */}
-                    <td className="py-4 px-4 text-center font-extrabold text-cyber-accent">
-                      {entry.totalPoints} pts
+                    <td className="py-4 px-4 text-center font-extrabold text-white">
+                      {entry.totalPoints.toFixed(2)} pts
                     </td>
 
                     {/* Avg Response Time */}

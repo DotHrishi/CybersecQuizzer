@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { dataService } from '@/lib/dataService';
 import { calculateScore } from '@/lib/scoring';
 import { getQuizGuardStatus } from '@/lib/quizGuard';
 import { QuizSubmissionSchema } from '@/lib/validation';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { activeSessions } from '@/lib/sessionStore';
+import { verifySubmissionAntiCheat } from '@/lib/antiCheat';
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -47,13 +48,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if attempt already exists in DB for this date
-    const existingAttempt = await db.userAttempt.findFirst({
-      where: {
-        userName: session.userName,
-        quizDate: session.quizDate,
-      },
-    });
+    // Check if attempt already exists in DB for this date (prevent multiple submissions)
+    const existingAttempt = await dataService.getUserAttemptToday(session.userName, session.quizDate);
 
     if (existingAttempt) {
       activeSessions.delete(sessionId);
@@ -63,35 +59,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const endTime = Date.now();
-    const responseTimeMs = Math.max(endTime - session.startTime, 300);
-
-    // Transient check of correct option
-    const question = await db.question.findUnique({
-      where: { id: session.questionId },
-      select: { correctOption: true },
-    });
-
-    if (!question) {
+    // Server-side anti-cheat verification
+    const antiCheat = verifySubmissionAntiCheat(session.startTime);
+    if (!antiCheat.isValid) {
       activeSessions.delete(sessionId);
-      return NextResponse.json({ success: false, message: 'Question not found.' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: 'Suspiciously fast automated submission detected. Please answer naturally.' },
+        { status: 400 }
+      );
     }
 
-    const isCorrect = question.correctOption.toUpperCase() === selectedOption.toUpperCase();
-    const scoreResult = calculateScore(isCorrect, responseTimeMs);
+    const responseTimeMs = antiCheat.verifiedResponseTimeMs;
+
+    // Verify option key: check against expectedOptionKey (from option shuffling) or fallback to DB lookup
+    let isCorrect = false;
+    const cleanSelected = String(selectedOption || '').trim().toUpperCase();
+    if (session.expectedOptionKey) {
+      isCorrect = String(session.expectedOptionKey || '').trim().toUpperCase() === cleanSelected;
+    } else {
+      const question = await dataService.getQuestionById(session.questionId);
+      if (!question) {
+        activeSessions.delete(sessionId);
+        return NextResponse.json({ success: false, message: 'Question not found.' }, { status: 404 });
+      }
+      isCorrect = String(question.correctOption || 'A').trim().toUpperCase() === cleanSelected;
+    }
+
+    const now = new Date();
+    const scoreResult = calculateScore(isCorrect, responseTimeMs, now);
 
     // Privacy Mandate: Store ONLY User Name, Quiz Date, Correct or Wrong, Score, Bonus Points, Total Points, Response Time, Timestamp.
     // DO NOT store question ID or selected option.
-    const attemptRecord = await db.userAttempt.create({
-      data: {
-        userName: session.userName,
-        quizDate: session.quizDate,
-        isCorrect: scoreResult.isCorrect,
-        score: scoreResult.score,
-        bonusPoints: scoreResult.bonusPoints,
-        totalPoints: scoreResult.totalPoints,
-        responseTimeMs: scoreResult.responseTimeMs,
-      },
+    const attemptRecord = await dataService.createUserAttempt({
+      userName: session.userName,
+      quizDate: session.quizDate,
+      isCorrect: scoreResult.isCorrect,
+      score: scoreResult.score,
+      bonusPoints: scoreResult.bonusPoints,
+      totalPoints: scoreResult.totalPoints,
+      responseTimeMs: scoreResult.responseTimeMs,
     });
 
     // Invalidate active session to prevent double submission

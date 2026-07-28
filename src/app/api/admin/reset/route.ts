@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { dataService } from '@/lib/dataService';
 
 function verifyAdminAuth(req: NextRequest): boolean {
-  const adminHeader = req.headers.get('x-admin-password');
-  const expectedPassword = process.env.ADMIN_PASSWORD || 'cyberadmin123';
-  return adminHeader === expectedPassword;
+  const adminHeader = req.headers.get('x-admin-password')?.trim();
+  const expectedPassword = (process.env.ADMIN_PASSWORD || 'cyberadmin123').trim();
+  return Boolean(adminHeader && adminHeader === expectedPassword);
 }
 
 export async function POST(req: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const { target } = await req.json();
 
     if (target === 'leaderboard') {
-      await db.userAttempt.deleteMany();
+      await dataService.resetLeaderboard();
       return NextResponse.json({ success: true, message: 'All user attempt records cleared. Leaderboards reset.' });
     }
 

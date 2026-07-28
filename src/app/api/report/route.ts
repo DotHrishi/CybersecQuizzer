@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { dataService } from '@/lib/dataService';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 
 export async function GET(req: NextRequest) {
@@ -20,10 +20,7 @@ export async function GET(req: NextRequest) {
   const cleanName = userName.trim();
 
   try {
-    const attempts = await db.userAttempt.findMany({
-      where: { userName: cleanName },
-      orderBy: { createdAt: 'desc' },
-    });
+    const attempts = await dataService.getUserAttempts(cleanName);
 
     if (attempts.length === 0) {
       return NextResponse.json({
@@ -43,22 +40,37 @@ export async function GET(req: NextRequest) {
     }
 
     const totalAttempts = attempts.length;
-    const correctAnswers = attempts.filter((a) => a.isCorrect).length;
+    const correctAnswers = attempts.filter((a: any) => a.isCorrect).length;
     const wrongAnswers = totalAttempts - correctAnswers;
     const accuracyPercentage = Math.round((correctAnswers / totalAttempts) * 100);
-    const totalPoints = attempts.reduce((acc, curr) => acc + curr.totalPoints, 0);
-    const totalTime = attempts.reduce((acc, curr) => acc + curr.responseTimeMs, 0);
+    const totalPoints = attempts.reduce((acc: number, curr: any) => acc + Number(curr.totalPoints || 0), 0);
+    const totalTime = attempts.reduce((acc: number, curr: any) => acc + Number(curr.responseTimeMs || 0), 0);
     const avgResponseTimeMs = Math.round(totalTime / totalAttempts);
 
-    // Calculate best rank among all users in total score
-    const allUsersScore: any[] = await db.$queryRaw`
-      SELECT userName, SUM(totalPoints) as pts, ROUND(AVG(responseTimeMs), 0) as avgTime
-      FROM user_attempts
-      GROUP BY userName
-      ORDER BY pts DESC, avgTime ASC;
-    `;
+    // Calculate best rank across all users
+    const allAttempts = await dataService.getAllAttempts();
+    const userTotalsMap = new Map<string, { totalPoints: number; totalTime: number; count: number }>();
 
-    const userRankIndex = allUsersScore.findIndex(
+    for (const att of allAttempts) {
+      const existing = userTotalsMap.get(att.userName) || { totalPoints: 0, totalTime: 0, count: 0 };
+      existing.totalPoints += Number(att.totalPoints || 0);
+      existing.totalTime += Number(att.responseTimeMs || 0);
+      existing.count += 1;
+      userTotalsMap.set(att.userName, existing);
+    }
+
+    const aggregatedUsers = Array.from(userTotalsMap.entries()).map(([name, data]) => ({
+      userName: name,
+      pts: data.totalPoints,
+      avgTime: Math.round(data.totalTime / data.count),
+    }));
+
+    aggregatedUsers.sort((a, b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      return a.avgTime - b.avgTime;
+    });
+
+    const userRankIndex = aggregatedUsers.findIndex(
       (u) => u.userName.toLowerCase() === cleanName.toLowerCase()
     );
     const bestRank = userRankIndex !== -1 ? userRankIndex + 1 : 'N/A';
@@ -74,14 +86,14 @@ export async function GET(req: NextRequest) {
         avgResponseTimeMs,
         totalPoints,
         bestRank,
-        history: attempts.map((a) => ({
+        history: attempts.map((a: any) => ({
           quizDate: a.quizDate,
           isCorrect: a.isCorrect,
           score: a.score,
           bonusPoints: a.bonusPoints,
           totalPoints: a.totalPoints,
           responseTimeMs: a.responseTimeMs,
-          createdAt: a.createdAt.toISOString(),
+          createdAt: new Date(a.createdAt).toISOString(),
         })),
       },
     });

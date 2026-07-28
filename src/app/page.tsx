@@ -31,10 +31,11 @@ export default function HomePage() {
   const checkUserSession = async (name: string) => {
     setIsLoading(true);
     try {
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
       const res = await fetch('/api/user/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userName: name }),
+        body: JSON.stringify({ userName: name, timeZone: userTz }),
       });
 
       const data = await res.json();
@@ -69,7 +70,8 @@ export default function HomePage() {
 
   const fetchRandomQuestion = async (name: string) => {
     try {
-      const res = await fetch(`/api/quiz/question?userName=${encodeURIComponent(name)}`);
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+      const res = await fetch(`/api/quiz/question?userName=${encodeURIComponent(name)}&timeZone=${encodeURIComponent(userTz)}`);
       const data = await res.json();
 
       if (res.status === 429) {
@@ -108,16 +110,16 @@ export default function HomePage() {
   };
 
   const handleChangeName = () => {
-    localStorage.removeItem('cyber_quiz_username');
     setUserName(null);
     setGuardState(null);
     setQuestionData(null);
     setSubmissionResult(null);
   };
 
-  // 1. No username set
+  // 1. No active session username set
   if (!userName) {
-    return <NameEntryModal onSave={handleSaveIdentity} />;
+    const lastSavedName = typeof window !== 'undefined' ? (localStorage.getItem('cyber_quiz_username') || '') : '';
+    return <NameEntryModal initialName={lastSavedName} onSave={handleSaveIdentity} />;
   }
 
   // 2. Loading state

@@ -36,13 +36,13 @@ export default function Navbar() {
             alt="CyberShield Logo" 
             width={40} 
             height={40} 
-            className="rounded-xl shadow-cyber-glow group-hover:scale-105 transition-transform object-cover" 
+            className="rounded-xl shadow-white-glow group-hover:scale-105 transition-transform object-cover" 
           />
           <div>
-            <span className="text-lg font-extrabold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-cyber-accent brand-logo-text">
+            <span className="text-lg font-extrabold tracking-wide text-white brand-logo-text">
               CYBERSHIELD
             </span>
-            <span className="block text-[10px] uppercase font-semibold text-cyber-accent tracking-widest -mt-1">
+            <span className="block text-[10px] uppercase font-semibold text-slate-400 tracking-widest -mt-1">
               Daily Quiz
             </span>
           </div>
@@ -59,8 +59,8 @@ export default function Navbar() {
                 href={link.href}
                 className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-cyber-accent/15 text-cyber-accent border border-cyber-accent/30 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-white text-black font-bold shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -73,8 +73,8 @@ export default function Navbar() {
         {/* Right Side: User + Theme Toggle */}
         <div className="flex items-center space-x-3">
           {userName && (
-            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-cyber-800/80 border border-cyber-accent/30 text-xs font-semibold text-cyber-accent shadow-sm">
-              <User className="w-3.5 h-3.5" />
+            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-cyber-800/80 border border-slate-700 text-xs font-semibold text-white shadow-sm">
+              <User className="w-3.5 h-3.5 text-slate-300" />
               <span className="max-w-[100px] truncate">{userName}</span>
             </div>
           )}
@@ -83,7 +83,7 @@ export default function Navbar() {
           <button
             onClick={toggle}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-9 h-9 rounded-xl flex items-center justify-center border border-slate-700 bg-cyber-800/80 hover:bg-cyber-700 transition-all hover:border-cyber-accent/40"
+            className="w-9 h-9 rounded-xl flex items-center justify-center border border-slate-700 bg-cyber-800/80 hover:bg-cyber-700 transition-all hover:border-white"
           >
             {theme === 'dark'
               ? <Sun className="w-4 h-4 text-amber-400" />
@@ -103,7 +103,7 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               className={`flex flex-col items-center text-[10px] font-medium transition-all ${
-                isActive ? 'text-cyber-accent font-bold' : 'text-slate-400 hover:text-slate-200'
+                isActive ? 'text-white font-bold' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Icon className="w-4 h-4 mb-0.5" />

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { dataService } from '@/lib/dataService';
 import { getQuizGuardStatus } from '@/lib/quizGuard';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { activeSessions } from '@/lib/sessionStore';
+import { shuffleOptions } from '@/lib/antiCheat';
 
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -11,6 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const userName = searchParams.get('userName');
+  const clientTimeZone = searchParams.get('timeZone') || req.headers.get('x-timezone') || undefined;
 
   if (!userName || userName.trim().length < 2) {
     return NextResponse.json(
@@ -19,7 +21,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const guard = getQuizGuardStatus();
+  const guard = getQuizGuardStatus(undefined, clientTimeZone);
 
   if (!guard.isOpen) {
     return NextResponse.json(
@@ -29,12 +31,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Double-check if user already attempted today
-  const existingAttempt = await db.userAttempt.findFirst({
-    where: {
-      userName: userName.trim(),
-      quizDate: guard.quizDate,
-    },
-  });
+  const existingAttempt = await dataService.getUserAttemptToday(userName.trim(), guard.quizDate);
 
   if (existingAttempt) {
     return NextResponse.json(
@@ -48,26 +45,29 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Verbatim SQL Query requirement:
-    // SELECT * FROM questions WHERE active=1 ORDER BY RANDOM() LIMIT 1;
-    const questions: any[] = await db.$queryRaw`
-      SELECT id, questionText, optionA, optionB, optionC, optionD, category, difficulty
-      FROM questions
-      WHERE active = 1
-      ORDER BY RANDOM()
-      LIMIT 1;
-    `;
+    const targetQuestion = await dataService.getRandomActiveQuestion();
 
-    if (!questions || questions.length === 0) {
+    if (!targetQuestion) {
       return NextResponse.json(
         { success: false, message: 'No active questions available in the question bank.' },
         { status: 404 }
       );
     }
 
-    const targetQuestion = questions[0];
+    // Randomize option order (Anti-Cheat option shuffling)
+    const rawOptions = {
+      A: targetQuestion.optionA,
+      B: targetQuestion.optionB,
+      C: targetQuestion.optionC,
+      D: targetQuestion.optionD,
+    };
 
-    // Create session token
+    const { shuffledOptions, newCorrectOptionKey } = shuffleOptions(
+      rawOptions,
+      targetQuestion.correctOption
+    );
+
+    // Create session token & store server-side start timestamp
     const sessionId = `qs_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const startTime = Date.now();
 
@@ -76,6 +76,7 @@ export async function GET(req: NextRequest) {
       startTime,
       userName: userName.trim(),
       quizDate: guard.quizDate,
+      expectedOptionKey: newCorrectOptionKey,
     });
 
     // Auto cleanup expired sessions after 10 minutes
@@ -88,12 +89,7 @@ export async function GET(req: NextRequest) {
       sessionId,
       question: {
         questionText: targetQuestion.questionText,
-        options: {
-          A: targetQuestion.optionA,
-          B: targetQuestion.optionB,
-          C: targetQuestion.optionC,
-          D: targetQuestion.optionD,
-        },
+        options: shuffledOptions,
         category: targetQuestion.category,
         difficulty: targetQuestion.difficulty,
       },

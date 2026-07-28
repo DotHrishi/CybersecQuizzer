@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { dataService } from '@/lib/dataService';
 import { getQuizGuardStatus } from '@/lib/quizGuard';
 import { UserNameSchema } from '@/lib/validation';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
@@ -21,15 +21,11 @@ export async function POST(req: NextRequest) {
     }
 
     const { userName } = validation.data;
-    const guard = getQuizGuardStatus();
+    const clientTimeZone = body.timeZone || req.headers.get('x-timezone') || undefined;
+    const guard = getQuizGuardStatus(undefined, clientTimeZone);
 
     // Check if user already attempted today
-    const existingAttempt = await db.userAttempt.findFirst({
-      where: {
-        userName: userName,
-        quizDate: guard.quizDate,
-      },
-    });
+    const existingAttempt = await dataService.getUserAttemptToday(userName, guard.quizDate);
 
     if (existingAttempt) {
       return NextResponse.json({

@@ -29,7 +29,7 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
           <h2 className="text-2xl font-bold text-white">Quiz Window Closed</h2>
           <p className="text-lg font-semibold text-amber-400">{message}</p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            The Cybersecurity Quiz is live Monday to Friday strictly between <strong>11:00 AM</strong> and <strong>7:12 PM</strong> local time.
+            The Cybersecurity Quiz is live Monday to Friday strictly between <strong>11:00 AM</strong> and <strong>2:00 PM</strong> local time.
           </p>
         </div>
       )}
@@ -42,18 +42,18 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
           <h2 className="text-2xl font-bold text-white">Daily Quiz Concluded</h2>
           <p className="text-lg font-semibold text-indigo-300">{message}</p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Today&apos;s quiz window (11:00 AM – 7:12 PM) has ended. Return tomorrow at 11:00 AM for the next challenge!
+            Today&apos;s quiz window (11:00 AM – 2:00 PM) has ended. Return tomorrow at 11:00 AM for the next challenge!
           </p>
         </div>
       )}
 
       {state === 'WEEKEND' && (
         <div className="space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-cyber-accent/10 border border-cyber-accent/30 flex items-center justify-center text-cyber-accent">
+          <div className="w-16 h-16 mx-auto rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white">
             <Calendar className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold text-white">Weekend Blackout</h2>
-          <p className="text-lg font-semibold text-cyber-accent">{message}</p>
+          <p className="text-lg font-semibold text-white">{message}</p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
             Quiz sessions run Monday through Friday. Leaderboards and personal progress reports remain accessible 24/7!
           </p>
@@ -62,31 +62,31 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
 
       {state === 'ALREADY_ATTEMPTED' && (
         <div className="space-y-5">
-          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="w-16 h-16 mx-auto rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold text-white">Attempt Recorded!</h2>
           <p className="text-base text-slate-300 font-medium">{message}</p>
 
           {attempt && (
-            <div className="p-4 rounded-xl bg-cyber-900/80 border border-emerald-500/30 text-left space-y-2">
+            <div className="p-4 rounded-xl bg-cyber-900/80 border border-slate-700 text-left space-y-2">
               <div className="flex justify-between items-center text-sm border-b border-slate-800 pb-2">
                 <span className="text-slate-400">Participant:</span>
                 <span className="font-bold text-white">{userName}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-400">Outcome:</span>
-                <span className={`font-bold ${attempt.isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`font-bold ${attempt.isCorrect ? 'text-slate-100' : 'text-rose-400'}`}>
                   {attempt.isCorrect ? 'Correct ✓' : 'Incorrect'}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-400">Speed Bonus:</span>
-                <span className="font-bold text-cyber-accent">+{attempt.bonusPoints} pts</span>
+                <span className="text-slate-400">Bonus Points:</span>
+                <span className="font-bold text-white">+{attempt.bonusPoints.toFixed(2)} pts</span>
               </div>
               <div className="flex justify-between items-center text-sm border-t border-slate-800 pt-2">
                 <span className="text-slate-300 font-semibold">Total Points Earned:</span>
-                <span className="text-lg font-extrabold text-cyber-accent">{attempt.totalPoints} pts</span>
+                <span className="text-lg font-extrabold text-white">{attempt.totalPoints.toFixed(2)} pts</span>
               </div>
               <div className="flex justify-between items-center text-xs text-slate-500 pt-1">
                 <span>Response Time:</span>
@@ -101,16 +101,16 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
       <div className="pt-6 border-t border-slate-800/80 mt-6 flex flex-wrap gap-3 justify-center">
         <Link
           href="/leaderboard"
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-cyber-800 hover:bg-cyber-700 text-white text-sm font-semibold transition-all border border-slate-700"
+          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-white text-black hover:bg-slate-200 text-sm font-semibold transition-all shadow-md"
         >
-          <Trophy className="w-4 h-4 text-amber-400" />
+          <Trophy className="w-4 h-4 text-black" />
           <span>View Leaderboard</span>
         </Link>
         <Link
           href="/report"
           className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-cyber-800 hover:bg-cyber-700 text-white text-sm font-semibold transition-all border border-slate-700"
         >
-          <BarChart2 className="w-4 h-4 text-cyber-accent" />
+          <BarChart2 className="w-4 h-4 text-slate-300" />
           <span>View My Report</span>
         </Link>
       </div>
