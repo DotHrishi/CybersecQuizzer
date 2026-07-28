@@ -30,7 +30,8 @@ jobs:
             exit 1
           fi
 
-          TARGET_ENDPOINT="${URL}/rest/v1/"
+          # Query questions table (runs an actual SELECT query on the Postgres database)
+          TARGET_ENDPOINT="${URL}/rest/v1/questions?select=id&limit=1"
           echo "Targeting Endpoint: $TARGET_ENDPOINT"
 
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -40,9 +41,22 @@ jobs:
             
           echo "Supabase HTTP Status Code: $HTTP_STATUS"
           
+          # If 404 (questions table not created yet), fallback to root OpenAPI schema request
+          if [ "$HTTP_STATUS" -eq 404 ]; then
+            echo "Table 'questions' not found, falling back to root REST API ping..."
+            TARGET_ENDPOINT="${URL}/rest/v1/"
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "apikey: $KEY" \
+              -H "Authorization: Bearer $KEY" \
+              -H "Accept: application/json" \
+              "$TARGET_ENDPOINT")
+            echo "Fallback HTTP Status Code: $HTTP_STATUS"
+          fi
+          
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
             echo "✅ Successfully pinged Supabase! Database keep-alive active."
           else
             echo "❌ Failed to ping Supabase. HTTP status: $HTTP_STATUS"
+            echo "Note: If status is 401, check if SUPABASE_ANON_KEY in GitHub Secrets is correct."
             exit 1
           fi
