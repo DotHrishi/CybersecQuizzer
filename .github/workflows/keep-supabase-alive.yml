@@ -2,8 +2,8 @@ name: Keep Supabase Project Alive
 
 on:
   schedule:
-    # Runs every 3 days at 00:00 UTC (well within Supabase's 7-day inactivity threshold)
-    - cron: '0 0 */3 * *'
+    # Runs daily at 00:00 UTC (5:30 AM IST)
+    - cron: '0 0 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
 
 jobs:
