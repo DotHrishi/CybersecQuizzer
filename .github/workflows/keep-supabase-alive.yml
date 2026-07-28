@@ -14,22 +14,21 @@ jobs:
         run: |
           echo "Pinging Supabase database to prevent auto-pause..."
           
-          # Clean and sanitize the URL (remove trailing slashes, quotes, or accidental spaces)
           RAW_URL="${{ secrets.SUPABASE_URL }}"
           RAW_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
           
-          if [ -z "$RAW_URL" ] || [ -z "$RAW_KEY" ]; then
+          # Clean spaces and quotes
+          URL=$(echo "$RAW_URL" | xargs | tr -d '"' | tr -d "'")
+          KEY=$(echo "$RAW_KEY" | xargs | tr -d '"' | tr -d "'")
+          
+          # Remove trailing slash if present
+          URL="${URL%/}"
+          
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
             echo "❌ Error: SUPABASE_URL or SUPABASE_ANON_KEY secret is empty or missing in GitHub Repository Secrets."
             echo "Please check Settings > Secrets and variables > Actions > Repository secrets."
             exit 1
           fi
-
-          # Strip surrounding quotes and trailing slashes
-          URL=$(echo "$RAW_URL" | tr -d '"' | tr -d "'" | sed 's visually\/$//' | xargs)
-          KEY=$(echo "$RAW_KEY" | tr -d '"' | tr -d "'" | xargs)
-          
-          # Remove trailing slash if present
-          URL="${URL%/}"
 
           TARGET_ENDPOINT="${URL}/rest/v1/"
           echo "Targeting Endpoint: $TARGET_ENDPOINT"
@@ -47,4 +46,3 @@ jobs:
             echo "❌ Failed to ping Supabase. HTTP status: $HTTP_STATUS"
             exit 1
           fi
-
