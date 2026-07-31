@@ -73,7 +73,7 @@ export const dataService = {
       try {
         const { data, error } = await supabase
           .from('questions')
-          .select('id, correctOption')
+          .select('id, correctOption, optionA, optionB, optionC, optionD')
           .eq('id', id)
           .single();
 
@@ -87,13 +87,14 @@ export const dataService = {
     try {
       return await db.question.findUnique({
         where: { id },
-        select: { id: true, correctOption: true },
+        select: { id: true, correctOption: true, optionA: true, optionB: true, optionC: true, optionD: true },
       });
     } catch (dbErr) {
       console.error('Prisma getQuestionById fallback failed:', dbErr);
       return null;
     }
   },
+
 
   async createUserAttempt(data: {
     userName: string;
@@ -222,7 +223,10 @@ export const dataService = {
     if (isSupabaseConfigured) {
       const { data, error } = await supabase
         .from('questions')
-        .update(questionData)
+        .update({
+          ...questionData,
+          updatedAt: new Date().toISOString(),
+        })
         .eq('id', id)
         .select()
         .single();

@@ -20,6 +20,7 @@ interface Question {
   difficulty: string;
   active: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
 
 interface Stats {
@@ -365,8 +366,12 @@ export default function AdminDashboard() {
           >
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <span className="text-xs text-slate-400 whitespace-nowrap">
-            Showing {filteredQuestions.length} / {questions.length} questions
+          <span className="text-xs text-slate-400 whitespace-nowrap flex items-center gap-3">
+            <span>Showing {filteredQuestions.length} / {questions.length} questions</span>
+            <span className="flex items-center gap-1.5 text-[11px] text-slate-400 border-l border-slate-700 pl-3">
+              <span className="w-2 h-2 rounded-full bg-rose-500 inline-block shadow-[0_0_6px_rgba(244,63,94,0.8)]" />
+              <span>Edited</span>
+            </span>
           </span>
         </div>
 
@@ -392,9 +397,25 @@ export default function AdminDashboard() {
                       {isLoading ? 'Loading...' : 'No questions found.'}
                     </td>
                   </tr>
-                ) : filteredQuestions.map(q => (
+                ) : filteredQuestions.map(q => {
+                  const isEdited = Boolean(
+                    q.updatedAt &&
+                    q.createdAt &&
+                    new Date(q.updatedAt).getTime() - new Date(q.createdAt).getTime() > 1000
+                  );
+                  return (
                   <tr key={q.id} className={`hover:bg-cyber-900/40 transition-colors ${!q.active ? 'opacity-50' : ''}`}>
-                    <td className="py-3 px-4 font-mono text-slate-500">#{q.id}</td>
+                    <td className="py-3 px-4 font-mono text-slate-500">
+                      <div className="flex items-center space-x-1.5">
+                        <span>#{q.id}</span>
+                        {isEdited && (
+                          <span
+                            className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.9)] animate-pulse inline-block"
+                            title={`Edited question (Updated: ${new Date(q.updatedAt!).toLocaleDateString()})`}
+                          />
+                        )}
+                      </div>
+                    </td>
                     <td className="py-3 px-4 font-medium text-white max-w-xs">
                       <span className="line-clamp-2">{q.questionText}</span>
                     </td>
@@ -449,7 +470,8 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );
+              })}
               </tbody>
             </table>
           </div>

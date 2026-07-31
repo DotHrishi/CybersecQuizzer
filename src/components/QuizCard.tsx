@@ -35,6 +35,7 @@ export default function QuizCard({ questionData, userName, onSubmitted }: QuizCa
       sessionId: questionData.sessionId,
       userName,
       selectedOption,
+      selectedOptionText: questionData.options[selectedOption],
     });
 
     if (!validation.success) {
@@ -52,6 +53,8 @@ export default function QuizCard({ questionData, userName, onSubmitted }: QuizCa
           sessionId: questionData.sessionId,
           userName,
           selectedOption,
+          selectedOptionText: questionData.options[selectedOption], // actual text of chosen answer
+          sessionToken: questionData.sessionToken,
         }),
       });
 

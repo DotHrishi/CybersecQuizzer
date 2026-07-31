@@ -8,11 +8,11 @@ export interface QuizGuardResult {
   currentTimeString: string;
 }
 
-export function getQuizGuardStatus(overrideDate?: Date, clientTimeZone?: string): QuizGuardResult {
+export function getQuizGuardStatus(overrideDate?: Date): QuizGuardResult {
   const now = overrideDate || new Date();
 
-  // Target timezone: use client-provided timezone, or process.env.TIMEZONE, or default to Asia/Kolkata
-  const timeZone = clientTimeZone || process.env.TIMEZONE || 'Asia/Kolkata';
+  // Target timezone: Strictly Indian Standard Time (Asia/Kolkata)
+  const timeZone = 'Asia/Kolkata';
 
   // Extract year, month, day, hour, minute, and weekday in target local timezone
   let partsMap: Record<string, string> = {};
@@ -86,7 +86,7 @@ export function getQuizGuardStatus(overrideDate?: Date, clientTimeZone?: string)
     };
   }
 
-  // 2. Timing Window: 11:00 AM (660 mins) to 2:00 PM (840 mins) ONLY
+  // 2. Timing Window: 11:00 AM (660 mins) to 2:00 PM (840 mins) ONLY IST
   const OPEN_MINUTES = 11 * 60;  // 11:00 AM
   const CLOSE_MINUTES = 14 * 60; // 2:00 PM
 
@@ -94,7 +94,7 @@ export function getQuizGuardStatus(overrideDate?: Date, clientTimeZone?: string)
     return {
       isOpen: false,
       state: 'BEFORE_WINDOW',
-      message: "Today's quiz will be available from 11:00 AM.",
+      message: "Today's quiz will be available from 11:00 AM IST.",
       quizDate,
       currentTimeString,
     };

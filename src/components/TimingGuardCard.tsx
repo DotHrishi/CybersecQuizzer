@@ -29,7 +29,7 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
           <h2 className="text-2xl font-bold text-white">Quiz Window Closed</h2>
           <p className="text-lg font-semibold text-amber-400">{message}</p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            The Cybersecurity Quiz is live Monday to Friday strictly between <strong>11:00 AM</strong> and <strong>2:00 PM</strong> local time.
+            The Cybersecurity Quiz is live Monday to Friday strictly between <strong>11:00 AM</strong> and <strong>2:00 PM IST</strong> (Indian Standard Time).
           </p>
         </div>
       )}
@@ -42,7 +42,7 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
           <h2 className="text-2xl font-bold text-white">Daily Quiz Concluded</h2>
           <p className="text-lg font-semibold text-indigo-300">{message}</p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Today&apos;s quiz window (11:00 AM – 2:00 PM) has ended. Return tomorrow at 11:00 AM for the next challenge!
+            Today&apos;s quiz window (11:00 AM – 2:00 PM IST) has ended. Return tomorrow at 11:00 AM IST for the next challenge!
           </p>
         </div>
       )}

@@ -31,11 +31,10 @@ export default function HomePage() {
   const checkUserSession = async (name: string) => {
     setIsLoading(true);
     try {
-      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
       const res = await fetch('/api/user/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userName: name, timeZone: userTz }),
+        body: JSON.stringify({ userName: name }),
       });
 
       const data = await res.json();
@@ -70,8 +69,7 @@ export default function HomePage() {
 
   const fetchRandomQuestion = async (name: string) => {
     try {
-      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-      const res = await fetch(`/api/quiz/question?userName=${encodeURIComponent(name)}&timeZone=${encodeURIComponent(userTz)}`);
+      const res = await fetch(`/api/quiz/question?userName=${encodeURIComponent(name)}`);
       const data = await res.json();
 
       if (res.status === 429) {
@@ -83,6 +81,7 @@ export default function HomePage() {
       if (data.success) {
         setQuestionData({
           sessionId: data.sessionId,
+          sessionToken: data.sessionToken,
           questionText: data.question.questionText,
           options: data.question.options,
           category: data.question.category,

@@ -6,6 +6,7 @@ import { QuizSubmissionSchema } from '@/lib/validation';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { activeSessions } from '@/lib/sessionStore';
 import { verifySubmissionAntiCheat } from '@/lib/antiCheat';
+import { verifySessionToken } from '@/lib/sessionToken';
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -23,8 +24,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { sessionId, userName, selectedOption } = validation.data;
-    const session = activeSessions.get(sessionId);
+    const { sessionId, userName, selectedOption, selectedOptionText, sessionToken } = validation.data;
+    let session = activeSessions.get(sessionId);
+
+    // Serverless fallback: in-memory session may be missing on a different instance.
+    // Recover session data from the cryptographically signed token instead.
+    if (!session && sessionToken) {
+      const tokenPayload = verifySessionToken(sessionToken);
+      if (tokenPayload && tokenPayload.sessionId === sessionId && tokenPayload.userName.toLowerCase() === userName.toLowerCase()) {
+        session = {
+          questionId: tokenPayload.questionId,
+          startTime: tokenPayload.startTime,
+          userName: tokenPayload.userName,
+          quizDate: tokenPayload.quizDate,
+          expectedOptionKey: tokenPayload.expectedOptionKey,
+        };
+      }
+    }
 
     if (!session) {
       return NextResponse.json(
@@ -71,19 +87,24 @@ export async function POST(req: NextRequest) {
 
     const responseTimeMs = antiCheat.verifiedResponseTimeMs;
 
-    // Verify option key: check against expectedOptionKey (from option shuffling) or fallback to DB lookup
-    let isCorrect = false;
-    const cleanSelected = String(selectedOption || '').trim().toUpperCase();
-    if (session.expectedOptionKey) {
-      isCorrect = String(session.expectedOptionKey || '').trim().toUpperCase() === cleanSelected;
-    } else {
-      const question = await dataService.getQuestionById(session.questionId);
-      if (!question) {
-        activeSessions.delete(sessionId);
-        return NextResponse.json({ success: false, message: 'Question not found.' }, { status: 404 });
-      }
-      isCorrect = String(question.correctOption || 'A').trim().toUpperCase() === cleanSelected;
+    // Compare by answer TEXT (not position key) — works correctly regardless of option shuffling.
+    // Fetch the question to get all option texts and determine the correct answer text.
+    const question = await dataService.getQuestionById(session.questionId);
+    if (!question) {
+      activeSessions.delete(sessionId);
+      return NextResponse.json({ success: false, message: 'Question not found.' }, { status: 404 });
     }
+
+    const correctKey = String(question.correctOption || 'A').trim().toUpperCase();
+    const optionMap: Record<string, string> = {
+      A: (question as any).optionA || '',
+      B: (question as any).optionB || '',
+      C: (question as any).optionC || '',
+      D: (question as any).optionD || '',
+    };
+    const correctOptionText = optionMap[correctKey] || '';
+    const isCorrect = correctOptionText.trim().toLowerCase() === selectedOptionText.trim().toLowerCase();
+
 
     const now = new Date();
     const scoreResult = calculateScore(isCorrect, responseTimeMs, now);
@@ -97,7 +118,7 @@ export async function POST(req: NextRequest) {
       score: scoreResult.score,
       bonusPoints: scoreResult.bonusPoints,
       totalPoints: scoreResult.totalPoints,
-      responseTimeMs: scoreResult.responseTimeMs,
+      responseTimeMs: Math.round(scoreResult.responseTimeMs),
     });
 
     // Invalidate active session to prevent double submission

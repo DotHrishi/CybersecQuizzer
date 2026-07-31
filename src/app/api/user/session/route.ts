@@ -21,8 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { userName } = validation.data;
-    const clientTimeZone = body.timeZone || req.headers.get('x-timezone') || undefined;
-    const guard = getQuizGuardStatus(undefined, clientTimeZone);
+    const guard = getQuizGuardStatus();
 
     // Check if user already attempted today
     const existingAttempt = await dataService.getUserAttemptToday(userName, guard.quizDate);

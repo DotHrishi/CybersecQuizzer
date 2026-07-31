@@ -17,7 +17,11 @@ export const QuizSubmissionSchema = z.object({
   selectedOption: z.enum(['A', 'B', 'C', 'D'], {
     errorMap: () => ({ message: 'Selected option must be A, B, C, or D.' }),
   }),
+  selectedOptionText: z.string().min(1, 'Selected option text is required.'),
+  // Stateless signed token for serverless fallback (session may not exist in memory on a different instance)
+  sessionToken: z.string().optional(),
 });
+
 
 // Question Bank CRUD validation
 export const QuestionSchema = z.object({

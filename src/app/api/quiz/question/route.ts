@@ -4,6 +4,7 @@ import { getQuizGuardStatus } from '@/lib/quizGuard';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { activeSessions } from '@/lib/sessionStore';
 import { shuffleOptions } from '@/lib/antiCheat';
+import { signSessionToken } from '@/lib/sessionToken';
 
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -12,7 +13,6 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const userName = searchParams.get('userName');
-  const clientTimeZone = searchParams.get('timeZone') || req.headers.get('x-timezone') || undefined;
 
   if (!userName || userName.trim().length < 2) {
     return NextResponse.json(
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const guard = getQuizGuardStatus(undefined, clientTimeZone);
+  const guard = getQuizGuardStatus();
 
   if (!guard.isOpen) {
     return NextResponse.json(
@@ -54,29 +54,28 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Randomize option order (Anti-Cheat option shuffling)
+    // Randomize option order per user (anti-cheat)
     const rawOptions = {
       A: targetQuestion.optionA,
       B: targetQuestion.optionB,
       C: targetQuestion.optionC,
       D: targetQuestion.optionD,
     };
+    const { shuffledOptions } = shuffleOptions(rawOptions, targetQuestion.correctOption);
+    const correctOptionKey = String(targetQuestion.correctOption).trim().toUpperCase();
 
-    const { shuffledOptions, newCorrectOptionKey } = shuffleOptions(
-      rawOptions,
-      targetQuestion.correctOption
-    );
-
-    // Create session token & store server-side start timestamp
+    // Create session & store server-side start timestamp
     const sessionId = `qs_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const startTime = Date.now();
+    const exp = startTime + 10 * 60 * 1000; // 10-minute expiry
 
+    // Best-effort in-memory cache (works on single instance / local dev)
     activeSessions.set(sessionId, {
       questionId: targetQuestion.id,
       startTime,
       userName: userName.trim(),
       quizDate: guard.quizDate,
-      expectedOptionKey: newCorrectOptionKey,
+      expectedOptionKey: correctOptionKey,
     });
 
     // Auto cleanup expired sessions after 10 minutes
@@ -84,9 +83,21 @@ export async function GET(req: NextRequest) {
       activeSessions.delete(sessionId);
     }, 10 * 60 * 1000);
 
+    // Signed stateless token — survives serverless instance hops
+    const sessionToken = signSessionToken({
+      sessionId,
+      questionId: targetQuestion.id,
+      userName: userName.trim(),
+      quizDate: guard.quizDate,
+      expectedOptionKey: correctOptionKey,
+      startTime,
+      exp,
+    });
+
     return NextResponse.json({
       success: true,
       sessionId,
+      sessionToken,
       question: {
         questionText: targetQuestion.questionText,
         options: shuffledOptions,
