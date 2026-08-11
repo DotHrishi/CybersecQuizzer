@@ -86,9 +86,9 @@ export function getQuizGuardStatus(overrideDate?: Date): QuizGuardResult {
     };
   }
 
-  // 2. Timing Window: 11:00 AM (660 mins) to 2:00 PM (840 mins) ONLY IST
+  // 2. Timing Window: 11:00 AM (660 mins) to 9:00 PM (1260 mins) ONLY IST
   const OPEN_MINUTES = 11 * 60;  // 11:00 AM
-  const CLOSE_MINUTES = 14 * 60; // 2:00 PM
+  const CLOSE_MINUTES = 21 * 60; // 9:00 PM
 
   if (currentTotalMinutes < OPEN_MINUTES) {
     return {
@@ -110,7 +110,7 @@ export function getQuizGuardStatus(overrideDate?: Date): QuizGuardResult {
     };
   }
 
-  // 3. Open Window (Strictly 11:00 AM to 2:00 PM, Mon-Fri)
+  // 3. Open Window (Strictly 11:00 AM to 9:00 PM, Mon-Fri)
   return {
     isOpen: true,
     state: 'OPEN',

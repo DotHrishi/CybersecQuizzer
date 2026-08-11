@@ -50,7 +50,7 @@ export default function ResultCelebration({
   }, [isCorrect]);
 
   return (
-    <div className="max-w-xl mx-auto my-8 glass-panel-glow p-8 rounded-3xl border border-white/20 text-center shadow-white-glow animate-float">
+    <div className="max-w-xl mx-auto my-8 glass-panel-glow p-8 rounded-3xl border border-white/20 text-center shadow-white-glow animate-float relative overflow-hidden">
       {isCorrect ? (
         <div className="space-y-6">
           {/* Trophy & Celebration Visual */}
@@ -64,12 +64,16 @@ export default function ResultCelebration({
             <Sparkles className="w-6 h-6 text-slate-300 absolute -bottom-1 -left-2 animate-pulse" />
           </div>
 
-          <div>
-            <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-white border border-white/20 text-xs font-bold uppercase tracking-widest mb-2">
-              Success Verified
+          <div className="space-y-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-widest">
+              Victory Verified ✓
             </span>
-            <h2 className="text-3xl font-extrabold text-white">{message}</h2>
-            <p className="text-sm text-slate-300 mt-1">Outstanding cyber situational awareness, {userName}!</p>
+
+            {/* Dynamic Quote */}
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-relaxed px-2">
+              &quot;{message}&quot;
+            </h2>
+            <p className="text-xs text-slate-300">Outstanding cyber situational awareness, <strong>{userName}</strong>!</p>
           </div>
 
           {/* Breakdown Card */}
@@ -80,7 +84,7 @@ export default function ResultCelebration({
             </div>
             <div className="p-3 rounded-xl bg-cyber-950/60 border border-slate-800">
               <span className="block text-[10px] text-slate-400 uppercase font-semibold">Bonus Points</span>
-              <span className="text-xl font-extrabold text-slate-200">+{bonusPoints.toFixed(2)}</span>
+              <span className="text-xl font-extrabold text-emerald-400">+{bonusPoints.toFixed(2)}</span>
             </div>
             <div className="p-3 rounded-xl bg-cyber-950/60 border border-slate-800">
               <span className="block text-[10px] text-slate-400 uppercase font-semibold">Total Score</span>
@@ -89,23 +93,27 @@ export default function ResultCelebration({
           </div>
 
           <p className="text-xs text-slate-400 flex items-center justify-center space-x-1">
-            <Zap className="w-3.5 h-3.5 text-white" />
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
             <span>Response Time: <strong>{(responseTimeMs / 1000).toFixed(2)} seconds</strong></span>
           </p>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Wrong Answer Visual */}
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-slate-800/80 border border-slate-700 p-1 flex items-center justify-center">
-            <Frown className="w-10 h-10 text-amber-400" />
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-rose-500/10 border border-rose-500/30 p-1 flex items-center justify-center">
+            <Frown className="w-10 h-10 text-rose-400" />
           </div>
 
-          <div>
-            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-widest mb-2">
-              Attempt Completed
+          <div className="space-y-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold uppercase tracking-widest">
+              Attempt Recorded
             </span>
-            <h2 className="text-2xl font-bold text-white">{message}</h2>
-            <p className="text-xs text-slate-400 mt-2 max-w-sm mx-auto">
+
+            {/* Dynamic Quote */}
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-relaxed px-2">
+              &quot;{message}&quot;
+            </h2>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
               Your response was recorded. Keep building your security skills and try again tomorrow!
             </p>
           </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dataService } from '@/lib/dataService';
 import { calculateScore } from '@/lib/scoring';
 import { getQuizGuardStatus } from '@/lib/quizGuard';
+import { generateResultQuote } from '@/lib/groqMessageService';
 import { QuizSubmissionSchema } from '@/lib/validation';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { activeSessions } from '@/lib/sessionStore';
@@ -105,12 +106,10 @@ export async function POST(req: NextRequest) {
     const correctOptionText = optionMap[correctKey] || '';
     const isCorrect = correctOptionText.trim().toLowerCase() === selectedOptionText.trim().toLowerCase();
 
-
     const now = new Date();
     const scoreResult = calculateScore(isCorrect, responseTimeMs, now);
 
     // Privacy Mandate: Store ONLY User Name, Quiz Date, Correct or Wrong, Score, Bonus Points, Total Points, Response Time, Timestamp.
-    // DO NOT store question ID or selected option.
     const attemptRecord = await dataService.createUserAttempt({
       userName: session.userName,
       quizDate: session.quizDate,
@@ -124,6 +123,9 @@ export async function POST(req: NextRequest) {
     // Invalidate active session to prevent double submission
     activeSessions.delete(sessionId);
 
+    // Generate dynamic real/motivational/funny result quote via Groq AI (no user names)
+    const resultQuote = await generateResultQuote(isCorrect);
+
     return NextResponse.json({
       success: true,
       isCorrect: attemptRecord.isCorrect,
@@ -132,7 +134,7 @@ export async function POST(req: NextRequest) {
       totalPoints: attemptRecord.totalPoints,
       responseTimeMs: attemptRecord.responseTimeMs,
       quizDate: attemptRecord.quizDate,
-      message: isCorrect ? 'Correct! Well done!' : 'Better luck next time.',
+      message: resultQuote,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

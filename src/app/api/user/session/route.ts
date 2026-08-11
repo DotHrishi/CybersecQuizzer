@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataService } from '@/lib/dataService';
 import { getQuizGuardStatus } from '@/lib/quizGuard';
+import { generateDynamicGuardMessage } from '@/lib/groqMessageService';
 import { UserNameSchema } from '@/lib/validation';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 
@@ -43,12 +44,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    let finalMessage = guard.message;
+    if (!guard.isOpen) {
+      finalMessage = await generateDynamicGuardMessage(guard.state, userName);
+    }
+
     return NextResponse.json({
       success: true,
       userName,
       guardState: guard.state,
       isOpen: guard.isOpen,
-      message: guard.message,
+      message: finalMessage,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: 'SERVER_ERROR', message: error.message }, { status: 500 });

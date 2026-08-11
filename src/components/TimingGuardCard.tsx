@@ -20,40 +20,50 @@ interface TimingGuardCardProps {
 
 export default function TimingGuardCard({ state, message, userName, attempt }: TimingGuardCardProps) {
   return (
-    <div className="max-w-xl mx-auto my-8 glass-panel p-8 rounded-2xl border border-slate-800 text-center shadow-2xl">
+    <div className="max-w-xl mx-auto my-8 glass-panel p-8 rounded-2xl border border-slate-800 text-center shadow-2xl relative overflow-hidden">
+      {/* Background Accent Glow */}
+      <div className="absolute -top-24 -left-24 w-48 h-48 bg-cyber-accent/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
       {state === 'BEFORE_WINDOW' && (
-        <div className="space-y-4">
+        <div className="space-y-4 relative z-10">
           <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
             <Clock className="w-8 h-8 animate-pulse" />
           </div>
           <h2 className="text-2xl font-bold text-white">Quiz Window Closed</h2>
-          <p className="text-lg font-semibold text-amber-400">{message}</p>
+          <p className="text-lg sm:text-xl font-semibold text-amber-400 leading-relaxed px-2">
+            &quot;{message}&quot;
+          </p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            The Cybersecurity Quiz is live Monday to Friday strictly between <strong>11:00 AM</strong> and <strong>2:00 PM IST</strong> (Indian Standard Time).
+            The Cybersecurity Quiz is live Monday to Friday strictly between <strong>11:00 AM</strong> and <strong>9:00 PM IST</strong> (Indian Standard Time).
           </p>
         </div>
       )}
 
       {state === 'AFTER_WINDOW' && (
-        <div className="space-y-4">
+        <div className="space-y-4 relative z-10">
           <div className="w-16 h-16 mx-auto rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
             <ShieldAlert className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold text-white">Daily Quiz Concluded</h2>
-          <p className="text-lg font-semibold text-indigo-300">{message}</p>
+          <p className="text-lg sm:text-xl font-semibold text-indigo-300 leading-relaxed px-2">
+            &quot;{message}&quot;
+          </p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Today&apos;s quiz window (11:00 AM – 2:00 PM IST) has ended. Return tomorrow at 11:00 AM IST for the next challenge!
+            Today&apos;s quiz window (11:00 AM – 9:00 PM IST) has ended. Return tomorrow at 11:00 AM IST for the next challenge!
           </p>
         </div>
       )}
 
       {state === 'WEEKEND' && (
-        <div className="space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white">
+        <div className="space-y-4 relative z-10">
+          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
             <Calendar className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold text-white">Weekend Blackout</h2>
-          <p className="text-lg font-semibold text-white">{message}</p>
+          <p className="text-lg sm:text-xl font-semibold text-emerald-300 leading-relaxed px-2">
+            &quot;{message}&quot;
+          </p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
             Quiz sessions run Monday through Friday. Leaderboards and personal progress reports remain accessible 24/7!
           </p>
@@ -61,7 +71,7 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
       )}
 
       {state === 'ALREADY_ATTEMPTED' && (
-        <div className="space-y-5">
+        <div className="space-y-5 relative z-10">
           <div className="w-16 h-16 mx-auto rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -76,7 +86,7 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-400">Outcome:</span>
-                <span className={`font-bold ${attempt.isCorrect ? 'text-slate-100' : 'text-rose-400'}`}>
+                <span className={`font-bold ${attempt.isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {attempt.isCorrect ? 'Correct ✓' : 'Incorrect'}
                 </span>
               </div>
@@ -98,7 +108,7 @@ export default function TimingGuardCard({ state, message, userName, attempt }: T
       )}
 
       {/* Navigation Quick Links */}
-      <div className="pt-6 border-t border-slate-800/80 mt-6 flex flex-wrap gap-3 justify-center">
+      <div className="pt-6 border-t border-slate-800/80 mt-6 flex flex-wrap gap-3 justify-center relative z-10">
         <Link
           href="/leaderboard"
           className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-white text-black hover:bg-slate-200 text-sm font-semibold transition-all shadow-md"

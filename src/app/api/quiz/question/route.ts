@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataService } from '@/lib/dataService';
 import { getQuizGuardStatus } from '@/lib/quizGuard';
+import { generateDynamicGuardMessage } from '@/lib/groqMessageService';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { activeSessions } from '@/lib/sessionStore';
 import { shuffleOptions } from '@/lib/antiCheat';
@@ -24,8 +25,9 @@ export async function GET(req: NextRequest) {
   const guard = getQuizGuardStatus();
 
   if (!guard.isOpen) {
+    const message = await generateDynamicGuardMessage(guard.state, userName.trim());
     return NextResponse.json(
-      { success: false, state: guard.state, message: guard.message },
+      { success: false, state: guard.state, message },
       { status: 403 }
     );
   }
