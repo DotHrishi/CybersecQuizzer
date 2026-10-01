@@ -4,8 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Lock, Plus, Edit2, Trash2, Download, Upload, AlertTriangle,
   X, Check, Eye, EyeOff, RefreshCw, ShieldCheck, BarChart2,
-  Users, BookOpen, Activity, Save
+  Users, BookOpen, Activity, Save, Mail, Send, ExternalLink
 } from 'lucide-react';
+import { DEFAULT_MONTHLY_RECIPIENTS } from '@/lib/recipients';
 import toast from 'react-hot-toast';
 
 interface Question {
@@ -58,6 +59,11 @@ export default function AdminDashboard() {
   const [formData, setFormData] = useState({ ...defaultForm });
   const [formSaving, setFormSaving] = useState(false);
   const [deleteToConfirm, setDeleteToConfirm] = useState<{ id: number; questionText: string } | null>(null);
+  
+  // Monthly Leaderboard Email State
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [testEmailRecipient, setTestEmailRecipient] = useState('');
 
   const categories = ['All', ...Array.from(new Set(questions.map(q => q.category)))];
 
@@ -232,6 +238,46 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleTriggerMonthlyEmail = async (isTestOnly: boolean) => {
+    if (isTestOnly && !testEmailRecipient) {
+      toast.error('Please enter a test email address.');
+      return;
+    }
+
+    if (!isTestOnly) {
+      const confirmed = window.confirm(
+        `Are you sure you want to send the monthly leaderboard email to all ${DEFAULT_MONTHLY_RECIPIENTS.length} recipients now?`
+      );
+      if (!confirmed) return;
+    }
+
+    setEmailSending(true);
+    try {
+      let url = '/api/cron/monthly-leaderboard';
+      const params = new URLSearchParams();
+      if (isTestOnly && testEmailRecipient) {
+        params.set('testRecipient', testEmailRecipient);
+      }
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const res = await fetch(url, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || 'Email sent successfully!');
+      } else {
+        toast.error(data.message || 'Failed to send email.');
+      }
+    } catch {
+      toast.error('Network error triggering email.');
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   const handleExportJSON = () => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(questions, null, 2));
     const a = document.createElement('a');
@@ -315,6 +361,12 @@ export default function AdminDashboard() {
           <div className="flex flex-wrap gap-2">
             <button onClick={openAddModal} className="flex items-center space-x-1.5 px-4 py-2 rounded-xl cyber-button text-xs font-bold">
               <Plus className="w-4 h-4" /><span>Add Question</span>
+            </button>
+            <button 
+              onClick={() => setEmailModalOpen(true)} 
+              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-xs font-semibold border border-purple-500/30 transition-colors"
+            >
+              <Mail className="w-4 h-4 text-purple-400" /><span>Monthly Email</span>
             </button>
             <button onClick={handleExportJSON} className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-cyber-800 hover:bg-cyber-700 text-white text-xs font-semibold border border-slate-700">
               <Download className="w-4 h-4 text-cyber-accent" /><span>Export JSON</span>
@@ -647,6 +699,139 @@ export default function AdminDashboard() {
                 Yes, Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MONTHLY LEADERBOARD EMAIL MODAL ===== */}
+      {emailModalOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+        >
+          <div
+            className="glass-panel rounded-3xl w-full max-w-2xl border border-purple-500/30 p-6 sm:p-8 shadow-[0_0_80px_-15px_rgba(168,85,247,0.3)] max-h-[90vh] overflow-y-auto space-y-6"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+                  <Mail className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-extrabold text-white">Monthly Leaderboard Email</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                      Cron Active
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Automatically triggered on the 1st of every month at 9:30 AM IST (04:00 UTC) via Vercel Cron.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEmailModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Cron & Info Card */}
+            <div className="p-4 rounded-2xl bg-cyber-900 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">Automatic Schedule:</span>
+                <span className="font-mono text-purple-300 font-semibold bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                  0 4 1 * * (1st of month)
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">Coverage:</span>
+                <span className="text-slate-200 font-semibold">Previous month's full results</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">Email Provider:</span>
+                <span className="text-emerald-400 font-semibold">Resend API</span>
+              </div>
+            </div>
+
+            {/* Recipients Section */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Configured Recipients ({DEFAULT_MONTHLY_RECIPIENTS.length})
+                </label>
+                <span className="text-[11px] text-slate-400">All unique team members</span>
+              </div>
+              <div className="max-h-36 overflow-y-auto p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-wrap gap-1.5">
+                {DEFAULT_MONTHLY_RECIPIENTS.map((email) => (
+                  <span
+                    key={email}
+                    className="inline-block px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300 text-[11px] font-mono"
+                  >
+                    {email}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Test Email Section */}
+            <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/20 space-y-3">
+              <label className="block text-xs font-bold text-purple-200">
+                Send Test Email (Single Recipient)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={testEmailRecipient}
+                  onChange={(e) => setTestEmailRecipient(e.target.value)}
+                  placeholder="Enter email to test dispatch..."
+                  className="flex-1 px-3 py-2 bg-cyber-900 border border-slate-700 rounded-xl text-white text-xs placeholder-slate-500 focus:outline-none focus:border-purple-400 font-mono"
+                />
+                <button
+                  type="button"
+                  disabled={emailSending}
+                  onClick={() => handleTriggerMonthlyEmail(true)}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-60"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send Test</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-800">
+              <a
+                href="/api/cron/monthly-leaderboard?dryRun=true&format=html"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Preview Template in New Tab</span>
+              </a>
+
+              <div className="flex w-full sm:w-auto gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEmailModalOpen(false)}
+                  className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  disabled={emailSending}
+                  onClick={() => handleTriggerMonthlyEmail(false)}
+                  className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{emailSending ? 'Dispatching...' : `Send to All (${DEFAULT_MONTHLY_RECIPIENTS.length}) Now`}</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
