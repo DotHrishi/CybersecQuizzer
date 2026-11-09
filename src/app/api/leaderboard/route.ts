@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dataService } from '@/lib/dataService';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { getQuizGuardStatus } from '@/lib/quizGuard';
 
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -10,23 +11,26 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const period = (searchParams.get('period') || 'daily').toLowerCase().replace('-', '');
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const todayStr = `${year}-${month}-${day}`;
+  // Use IST date from quizGuard — the same source used when storing quizDate on every attempt.
+  // Using server-local (UTC) date caused a mismatch: attempts stored with IST quizDate
+  // would not match the UTC-derived todayStr, making the Daily tab appear empty.
+  const { quizDate: todayStr } = getQuizGuardStatus();
+
+  // Compute weekly/monthly boundaries in IST by parsing todayStr (YYYY-MM-DD in IST)
+  const [todayYear, todayMonth, todayDay] = todayStr.split('-').map(Number);
 
   let minDateStr = '';
   if (period === 'daily') {
     minDateStr = todayStr;
   } else if (period === 'weekly') {
-    const d = new Date(now);
-    const dayIndex = d.getDay();
-    const diffToMon = d.getDate() - dayIndex + (dayIndex === 0 ? -6 : 1);
-    const mon = new Date(d.setDate(diffToMon));
-    minDateStr = `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, '0')}-${String(mon.getDate()).padStart(2, '0')}`;
+    // Find the Monday of the current IST week
+    const istNow = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay));
+    const dayIndex = istNow.getUTCDay(); // 0=Sun, 1=Mon ... 6=Sat
+    const diffToMon = dayIndex === 0 ? -6 : 1 - dayIndex;
+    istNow.setUTCDate(istNow.getUTCDate() + diffToMon);
+    minDateStr = `${istNow.getUTCFullYear()}-${String(istNow.getUTCMonth() + 1).padStart(2, '0')}-${String(istNow.getUTCDate()).padStart(2, '0')}`;
   } else if (period === 'monthly') {
-    minDateStr = `${year}-${month}-01`;
+    minDateStr = `${todayYear}-${String(todayMonth).padStart(2, '0')}-01`;
   } else {
     // alltime
     minDateStr = '1970-01-01';
