@@ -130,9 +130,28 @@ export const dataService = {
   async getAllAttempts() {
     if (isSupabaseConfigured) {
       try {
-        const { data, error } = await supabase.from('user_attempts').select('*');
-        if (!error && data) return data;
-        console.error('Supabase getAllAttempts error:', error);
+        // Supabase caps single requests at 1000 rows — paginate to get all records.
+        const PAGE_SIZE = 1000;
+        let allData: any[] = [];
+        let from = 0;
+
+        while (true) {
+          const { data, error } = await supabase
+            .from('user_attempts')
+            .select('*')
+            .range(from, from + PAGE_SIZE - 1);
+
+          if (error) {
+            console.error('Supabase getAllAttempts error:', error);
+            break;
+          }
+          if (!data || data.length === 0) break;
+          allData = allData.concat(data);
+          if (data.length < PAGE_SIZE) break; // last page
+          from += PAGE_SIZE;
+        }
+
+        if (allData.length > 0) return allData;
       } catch (err) {
         console.warn('Supabase getAllAttempts failed:', err);
       }
@@ -142,6 +161,30 @@ export const dataService = {
       return await db.userAttempt.findMany();
     } catch (dbErr) {
       console.error('Prisma getAllAttempts fallback failed:', dbErr);
+      return [];
+    }
+  },
+
+  async getAttemptsByDateRange(minDate: string) {
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase
+          .from('user_attempts')
+          .select('*')
+          .gte('quizDate', minDate);
+        if (!error && data) return data;
+        console.error('Supabase getAttemptsByDateRange error:', error);
+      } catch (err) {
+        console.warn('Supabase getAttemptsByDateRange failed:', err);
+      }
+    }
+
+    try {
+      return await db.userAttempt.findMany({
+        where: { quizDate: { gte: minDate } },
+      });
+    } catch (dbErr) {
+      console.error('Prisma getAttemptsByDateRange fallback failed:', dbErr);
       return [];
     }
   },

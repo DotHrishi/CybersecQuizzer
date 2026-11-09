@@ -37,17 +37,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const allAttempts = await dataService.getAllAttempts();
+    // Fetch only the rows needed for the requested period — avoids Supabase's
+    // 1000-row default cap that was silently truncating recent attempts.
+    const attempts = await (period === 'alltime'
+      ? dataService.getAllAttempts()
+      : dataService.getAttemptsByDateRange(minDateStr)) as any[];
 
-    const filtered = allAttempts.filter((a: any) => {
-      if (period === 'daily') {
-        return a.quizDate === todayStr;
-      }
-      if (period === 'alltime') {
-        return true;
-      }
-      return a.quizDate >= minDateStr;
-    });
+    const filtered = period === 'alltime'
+      ? attempts
+      : attempts.filter((a: any) => {
+          if (period === 'daily') return a.quizDate === todayStr;
+          return a.quizDate >= minDateStr;
+        });
 
     const userStatsMap = new Map<string, {
       userName: string;
